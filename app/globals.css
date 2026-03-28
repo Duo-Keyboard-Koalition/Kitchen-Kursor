@@ -3,49 +3,108 @@
 @tailwind utilities;
 
 @layer base {
+  /* ─── Light Mode ──────────────────────────────────────────────────── */
   :root {
-    --background: 0 0% 100%;
-    --foreground: 224 71.4% 4.1%;
-    --card: 0 0% 100%;
-    --card-foreground: 224 71.4% 4.1%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 4.1%;
-    --primary: 220 13.0% 45.9%; /* Adjusted for a less intense primary */
-    --primary-foreground: 210 20% 98%;
-    --secondary: 220 14.3% 95.9%;
-    --secondary-foreground: 220.9 39.3% 11%;
-    --muted: 220 14.3% 95.9%;
-    --muted-foreground: 220 8.9% 46.1%;
-    --accent: 220 14.3% 95.9%;
-    --accent-foreground: 220.9 39.3% 11%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 220.9 39.3% 11%; /* Adjusted for better visibility on light/dark */
-    --radius: 0.5rem;
+    /* Shadcn/ui core tokens */
+    --background:            220 14%  96%;   /* gray-100  — page bg       */
+    --foreground:              0  0%   9%;   /* neutral-900               */
+    --card:                    0  0% 100%;   /* white                     */
+    --card-foreground:         0  0%   9%;
+    --popover:                 0  0% 100%;
+    --popover-foreground:      0  0%   9%;
+    --primary:                48 96%  53%;   /* yellow-400 — brand        */
+    --primary-foreground:      0  0%   9%;   /* dark text on yellow       */
+    --secondary:             220 14%  96%;
+    --secondary-foreground:    0  0%   9%;
+    --muted:                 220 14%  96%;
+    --muted-foreground:      220  9%  46%;
+    --accent:                 48 96%  89%;   /* yellow-100 tint           */
+    --accent-foreground:       0  0%   9%;
+    --destructive:             0 84%  60%;
+    --destructive-foreground:  0  0%  98%;
+    --border:                220 13%  91%;   /* gray-200                  */
+    --input:                 220 13%  91%;
+    --ring:                   48 96%  53%;   /* yellow focus ring         */
+    --radius:                 0.5rem;
+
+    /* ── Brand (yellow) ─────────────────────────────────────────────── */
+    --brand:                  48 96%  53%;   /* yellow-400                */
+    --brand-hover:            45 93%  47%;   /* yellow-500                */
+    --brand-foreground:        0  0%   9%;   /* dark text on yellow       */
+    --brand-text:             41 96%  40%;   /* yellow-600 — inline text  */
+    --brand-subtle:           48 96%  89%;   /* yellow-100 — tint bg      */
+
+    /* ── Overlay (dark contrast sections) ──────────────────────────── */
+    --overlay:                 0  0%   9%;   /* neutral-900               */
+    --overlay-deep:            0  0%   4%;   /* neutral-950               */
+    --overlay-foreground:      0  0% 100%;   /* white on dark             */
+
+    /* ── Raised surface (inputs, form panels) ───────────────────────── */
+    --raised:                210 20%  98%;   /* gray-50                   */
+
+    /* ── Success / Waste-Saver ──────────────────────────────────────── */
+    --success:               142 71%  45%;
+    --success-foreground:      0  0% 100%;
+    --success-subtle:        138 76%  97%;   /* green-50                  */
+    --success-border:        141 84%  85%;   /* green-200                 */
+    --success-text:          140 61%  31%;   /* green-700                 */
+    --success-text-muted:    142 63%  42%;   /* green-600                 */
+
+    /* ── Layout chrome ───────────────────────────────────────────────── */
+    --nav:                     0  0% 100%;
+    --nav-border:            220 13%  91%;
+    --footer:                220 13%  87%;   /* gray-200                  */
   }
 
+  /* ─── Dark Mode ───────────────────────────────────────────────────── */
   .dark {
-    --background: 224 71.4% 4.1%; /* Darker background */
-    --foreground: 210 20% 98%;
-    --card: 224 71.4% 5.1%; /* Slightly lighter card */
-    --card-foreground: 210 20% 98%;
-    --popover: 224 71.4% 5.1%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 210 20% 98%;
-    --primary-foreground: 220.9 39.3% 11%;
-    --secondary: 215 27.9% 16.9%;
-    --secondary-foreground: 210 20% 98%;
-    --muted: 215 27.9% 16.9%;
-    --muted-foreground: 217.9 10.6% 64.9%;
-    --accent: 215 27.9% 16.9%;
-    --accent-foreground: 210 20% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 215 27.9% 16.9%;
-    --input: 215 27.9% 16.9%;
-    --ring: 216 12.2% 83.9%;
+    --background:              0  0%   9%;   /* neutral-900               */
+    --foreground:              0  0%  98%;
+    --card:                    0  0%  15%;   /* neutral-800               */
+    --card-foreground:         0  0%  98%;
+    --popover:                 0  0%  15%;
+    --popover-foreground:      0  0%  98%;
+    --primary:                48 96%  53%;   /* same yellow               */
+    --primary-foreground:      0  0%   9%;
+    --secondary:               0  0%  25%;   /* neutral-700               */
+    --secondary-foreground:    0  0%  98%;
+    --muted:                   0  0%  25%;
+    --muted-foreground:        0  0%  64%;
+    --accent:                  0  0%  25%;
+    --accent-foreground:       0  0%  98%;
+    --destructive:             0 63%  31%;
+    --destructive-foreground:  0  0%  98%;
+    --border:                  0  0%  25%;   /* neutral-700               */
+    --input:                   0  0%  25%;
+    --ring:                   48 96%  53%;
+
+    /* ── Brand ──────────────────────────────────────────────────────── */
+    --brand:                  48 96%  53%;
+    --brand-hover:            45 93%  47%;
+    --brand-foreground:        0  0%   9%;
+    --brand-text:             48 96%  53%;   /* full brightness in dark   */
+    --brand-subtle:           32 95%  12%;   /* dark yellow tint          */
+
+    /* ── Overlay ────────────────────────────────────────────────────── */
+    --overlay:                 0  0%   4%;   /* neutral-950               */
+    --overlay-deep:            0  0%   2%;
+    --overlay-foreground:      0  0% 100%;
+
+    /* ── Raised ─────────────────────────────────────────────────────── */
+    --raised:                  0  0%  25%;   /* neutral-700               */
+
+    /* ── Success ────────────────────────────────────────────────────── */
+    --success:               142 71%  45%;
+    --success-foreground:      0  0% 100%;
+    --success-subtle:        142 69%   7%;   /* dark green tint           */
+    --success-border:        140 64%  24%;   /* green-800                 */
+    --success-text:          142 70%  73%;   /* green-300                 */
+    --success-text-muted:    142 71%  60%;   /* green-400                 */
+
+    /* ── Layout chrome ───────────────────────────────────────────────── */
+    --nav:                     0  0%   9%;
+    --nav-border:              0  0%  25%;
+    --footer:                  0  0%  15%;   /* neutral-800               */
   }
 }
 

@@ -112,7 +112,7 @@ function RecipesPageContent() {
           <h1 className="text-3xl font-bold text-neutral-800 dark:text-white">Discover Recipes</h1>
           <p className="text-sm text-muted-foreground mt-1">
             All ingredients auto-matched to NoName prices ·{" "}
-            <span className="text-green-600 dark:text-green-400 font-medium">
+            <span className="text-success-muted font-medium">
               {wasteSaverCount} Waste Saver {wasteSaverCount === 1 ? "recipe" : "recipes"} available
             </span>
           </p>
@@ -132,13 +132,13 @@ function RecipesPageContent() {
       </div>
 
       {/* Near-expiry banner */}
-      <div className="mb-5 flex items-start gap-3 p-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
-        <Leaf className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+      <div className="mb-5 flex items-start gap-3 p-4 rounded-lg bg-success-subtle border border-success-border">
+        <Leaf className="w-5 h-5 text-success-muted mt-0.5 flex-shrink-0" />
         <div>
-          <p className="text-sm font-semibold text-green-800 dark:text-green-300">
+          <p className="text-sm font-semibold text-success-text">
             Rescue Near-Expiry Ingredients — Earn Bonus PCO Points
           </p>
-          <p className="text-xs text-green-700 dark:text-green-400 mt-0.5">
+          <p className="text-xs text-success-muted mt-0.5">
             <strong>Waste Saver</strong> recipes use NoName ingredients close to expiry at a discount.
             Cook them before they go to landfill and earn extra PCO points — every meal cooked is food that didn't get thrown out.
             Share these with your campus group chat to spread the savings.
@@ -154,8 +154,8 @@ function RecipesPageContent() {
             onClick={() => setActiveFilter(filter)}
             className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors ${
               activeFilter === filter
-                ? "bg-yellow-400 border-yellow-400 text-neutral-900"
-                : "border-yellow-400 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-400/10"
+                ? "bg-brand border-brand text-brand-foreground"
+                : "border-brand text-brand-text hover:bg-brand/10"
             }`}
           >
             {FILTER_LABELS[filter]}
@@ -189,7 +189,7 @@ function RecipesPageContent() {
 
 function RecipeCard({ recipe }: { recipe: FirestoreRecord }) {
   return (
-    <Card className="overflow-hidden bg-white dark:bg-neutral-800 shadow-md hover:shadow-lg transition-shadow flex flex-col">
+    <Card className="overflow-hidden bg-card shadow-md hover:shadow-lg transition-shadow flex flex-col">
       {/* Image + badges */}
       <Link href={`/recipes/${recipe.id}`}>
         <div className="relative">
@@ -252,7 +252,7 @@ function RecipeCard({ recipe }: { recipe: FirestoreRecord }) {
         <Button
           variant="outline"
           size="sm"
-          className="border-yellow-500 text-yellow-500 hover:bg-yellow-500/10 hover:text-yellow-600 dark:hover:text-yellow-400"
+          className="border-brand text-brand hover:bg-brand/10"
         >
           <PlusCircle className="h-4 w-4 mr-1" /> Add
         </Button>

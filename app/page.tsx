@@ -1,22 +1,22 @@
 import type React from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Gift, UploadCloud, ShoppingBasket, TrendingUp, Users, DollarSign, AlertTriangle, Leaf, ChefHat, Handshake } from "lucide-react"
+import { Gift, UploadCloud, TrendingUp, Users, DollarSign, AlertTriangle, Leaf, ChefHat, Handshake } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
 export default function HomePage() {
   return (
-    <div className="bg-gray-50 dark:bg-neutral-900 text-neutral-800 dark:text-white">
+    <div className="bg-background text-foreground">
 
       {/* Crisis Banner */}
-      <div className="bg-neutral-900 dark:bg-neutral-950 text-yellow-400 py-3 px-4 text-center text-sm font-medium">
+      <div className="bg-overlay text-brand py-3 px-4 text-center text-sm font-medium">
         <AlertTriangle className="inline w-4 h-4 mr-2 mb-0.5" />
         Canadian grocery prices are up <strong>3–5%</strong> in 2025. Meanwhile stores throw away <strong>30%</strong> of their stock. We fix both.
       </div>
 
-      {/* Hero Section */}
-      <section className="py-16 md:py-24 bg-yellow-400 dark:bg-yellow-600">
+      {/* Hero */}
+      <section className="py-16 md:py-24 bg-brand">
         <div className="container mx-auto px-4 text-center">
           <div className="flex justify-center mb-6">
             <Image
@@ -24,28 +24,24 @@ export default function HomePage() {
               alt="NoName Recipes Logo"
               width={120}
               height={120}
-              className="rounded-full bg-white p-2 shadow-lg"
+              className="rounded-full bg-card p-2 shadow-lg"
             />
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold text-neutral-900 mb-4">
+          <h1 className="text-4xl md:text-6xl font-bold text-brand-foreground mb-4">
             Cook It. Share It.<br />Waste Nothing.
           </h1>
-          <p className="text-lg md:text-xl text-neutral-800 max-w-2xl mx-auto mb-8">
+          <p className="text-lg md:text-xl text-brand-foreground/80 max-w-2xl mx-auto mb-8">
             NoName Recipes connects students with budget recipes, surplus grocery ingredients, and PCO rewards —
             so every dollar you spend on food actually feeds you.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link href="/recipes">
-              <Button size="lg" className="bg-neutral-800 hover:bg-neutral-700 text-white">
+              <Button size="lg" className="bg-overlay hover:bg-overlay/90 text-overlay-foreground">
                 Explore Recipes
               </Button>
             </Link>
             <Link href="/upload">
-              <Button
-                size="lg"
-                variant="outline"
-                className="bg-neutral-800 hover:bg-neutral-700 text-white"
-              >
+              <Button size="lg" variant="outline" className="border-brand-foreground text-brand-foreground hover:bg-brand-foreground/10">
                 Share a Recipe
               </Button>
             </Link>
@@ -54,19 +50,19 @@ export default function HomePage() {
       </section>
 
       {/* Stats Bar */}
-      <section className="py-10 bg-neutral-800 dark:bg-neutral-950 text-white">
+      <section className="py-10 bg-overlay text-overlay-foreground">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            <StatItem value="30%" label="of all grocery stock is thrown away" />
-            <StatItem value="$762" label="wasted per person on food yearly" />
-            <StatItem value="38%" label="of students face food insecurity" />
+            <StatItem value="30%"     label="of all grocery stock is thrown away" />
+            <StatItem value="$762"    label="wasted per person on food yearly" />
+            <StatItem value="38%"     label="of students face food insecurity" />
             <StatItem value="16B lbs" label="of food waste from U.S. stores yearly" />
           </div>
         </div>
       </section>
 
-      {/* How It Works Section */}
-      <section className="py-16 md:py-24">
+      {/* How It Works */}
+      <section className="py-16 md:py-24 bg-background">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-4">How It Works</h2>
           <p className="text-center text-muted-foreground max-w-xl mx-auto mb-12">
@@ -74,17 +70,17 @@ export default function HomePage() {
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <FeatureCard
-              icon={<ChefHat className="w-10 h-10 text-yellow-500" />}
+              icon={<ChefHat className="w-10 h-10 text-brand" />}
               title="Cook It Yourself"
-              description="Cooking at home costs 5x less than eating out. Upload or discover recipes built for student kitchens — quick, cheap, and made with ingredients you can actually buy."
+              description="Cooking at home costs 5× less than eating out. Upload or discover recipes built for student kitchens — quick, cheap, and made with ingredients you can actually buy."
             />
             <FeatureCard
-              icon={<Handshake className="w-10 h-10 text-yellow-500" />}
+              icon={<Handshake className="w-10 h-10 text-brand" />}
               title="Share With Your Campus"
               description="Every recipe you share connects your peers to affordable meals — and helps grocery stores move near-expiry stock before it becomes waste."
             />
             <FeatureCard
-              icon={<Leaf className="w-10 h-10 text-yellow-500" />}
+              icon={<Leaf className="w-10 h-10 text-brand" />}
               title="Waste Nothing, Earn More"
               description="Recipes matched to near-expiry NoName ingredients earn bonus PCO points. You get a deal. The store avoids throwing it out. The planet wins too."
             />
@@ -92,38 +88,38 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Three-Way Win Section */}
-      <section className="py-16 md:py-24 bg-neutral-900 text-white">
+      {/* Three-Way Win */}
+      <section className="py-16 md:py-24 bg-overlay text-overlay-foreground">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">One Platform. Three Problems Solved.</h2>
-            <p className="text-lg text-neutral-400 max-w-2xl mx-auto">
+            <p className="text-lg text-overlay-foreground/60 max-w-2xl mx-auto">
               Rising prices, food insecurity, and grocery waste are three symptoms of the same broken system.
               NoName Recipes connects the people who need food with the food that would otherwise be wasted.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <PriceCard
-              icon={<ChefHat className="w-8 h-8 text-yellow-400" />}
+            <OverlayCard
+              icon={<ChefHat className="w-8 h-8 text-brand" />}
               title="Students Cook More"
-              description="Home cooking costs 5x less than restaurants. Every recipe you follow instead of ordering out puts real money back in your pocket — $200–$400/month for a typical student."
+              description="Home cooking costs 5× less than restaurants. Every recipe you follow instead of ordering out puts real money back in your pocket — $200–$400/month for a typical student."
             />
-            <PriceCard
-              icon={<Handshake className="w-8 h-8 text-yellow-400" />}
+            <OverlayCard
+              icon={<Handshake className="w-8 h-8 text-brand" />}
               title="Stores Waste Less"
-              description="Grocery stores throw away 30% of their stock. When students cook recipes built around near-expiry NoName ingredients, stores sell what they'd otherwise bin — at a discount that benefits everyone."
+              description="Grocery stores throw away 30% of their stock. When students cook recipes built around near-expiry NoName ingredients, stores sell what they'd otherwise bin."
             />
-            <PriceCard
-              icon={<Leaf className="w-8 h-8 text-yellow-400" />}
+            <OverlayCard
+              icon={<Leaf className="w-8 h-8 text-brand" />}
               title="Less Goes to Landfill"
-              description="16 billion pounds of food hit U.S. landfills from stores every year. Every recipe that uses surplus produce is a meal that didn't become waste — and a PCO bonus for the student who cooked it."
+              description="16 billion pounds of food hit U.S. landfills from stores every year. Every recipe that uses surplus produce is a meal that didn't become waste."
             />
           </div>
         </div>
       </section>
 
-      {/* For Students Section */}
-      <section className="py-16 md:py-24 bg-gray-100 dark:bg-neutral-800">
+      {/* For Students */}
+      <section className="py-16 md:py-24 bg-muted">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">Built for Students. Free Forever.</h2>
@@ -145,7 +141,7 @@ export default function HomePage() {
             <div className="space-y-6">
               <InfoPill
                 title="Cook It Yourself — Save $200+/month"
-                description="Eating out as a student costs 5x what cooking at home does. Every recipe you follow instead of ordering puts real money back in your pocket."
+                description="Eating out as a student costs 5× what cooking at home does. Every recipe you follow instead of ordering puts real money back in your pocket."
               />
               <InfoPill
                 title="Share Recipes, Reduce Campus Waste"
@@ -164,20 +160,20 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Call to Action */}
-      <section className="py-16 md:py-24 bg-yellow-500 dark:bg-yellow-600">
+      {/* CTA */}
+      <section className="py-16 md:py-24 bg-brand">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-neutral-900 mb-4">Cook More. Waste Less. Share Everything.</h2>
-          <p className="text-lg text-neutral-800 max-w-xl mx-auto mb-8">
+          <h2 className="text-3xl font-bold text-brand-foreground mb-4">Cook More. Waste Less. Share Everything.</h2>
+          <p className="text-lg text-brand-foreground/80 max-w-xl mx-auto mb-8">
             Join your campus community. Share recipes, rescue near-expiry ingredients, and earn PCO points
             while you fight food waste — one meal at a time.
           </p>
           <Link href="/get-started">
-            <Button size="lg" className="bg-neutral-800 hover:bg-neutral-700 text-white px-10 py-6 text-lg">
+            <Button size="lg" className="bg-overlay hover:bg-overlay/90 text-overlay-foreground px-10 py-6 text-lg">
               Join Free — Start Cooking
             </Button>
           </Link>
-          <p className="text-sm text-neutral-700 mt-4">Free forever for students. No subscription. No fees.</p>
+          <p className="text-sm text-brand-foreground/70 mt-4">Free forever for students. No subscription. No fees.</p>
         </div>
       </section>
     </div>
@@ -187,17 +183,17 @@ export default function HomePage() {
 function StatItem({ value, label }: { value: string; label: string }) {
   return (
     <div>
-      <p className="text-3xl md:text-4xl font-bold text-yellow-400 mb-1">{value}</p>
-      <p className="text-sm text-neutral-400">{label}</p>
+      <p className="text-3xl md:text-4xl font-bold text-brand mb-1">{value}</p>
+      <p className="text-sm text-overlay-foreground/60">{label}</p>
     </div>
   )
 }
 
 function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
-    <Card className="bg-white dark:bg-neutral-800 shadow-lg hover:shadow-xl transition-shadow">
+    <Card className="bg-card shadow-lg hover:shadow-xl transition-shadow">
       <CardHeader className="items-center text-center">
-        <div className="p-4 bg-yellow-100 dark:bg-yellow-500/20 rounded-full inline-block mb-4">{icon}</div>
+        <div className="p-4 bg-brand-subtle rounded-full inline-block mb-4">{icon}</div>
         <CardTitle className="text-xl">{title}</CardTitle>
       </CardHeader>
       <CardContent>
@@ -207,20 +203,20 @@ function FeatureCard({ icon, title, description }: { icon: React.ReactNode; titl
   )
 }
 
-function PriceCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
+function OverlayCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
-    <div className="p-6 bg-neutral-800 dark:bg-neutral-900 border border-neutral-700 rounded-lg">
+    <div className="p-6 bg-overlay-foreground/5 border border-overlay-foreground/10 rounded-lg">
       <div className="mb-4">{icon}</div>
-      <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
-      <p className="text-neutral-400 text-sm">{description}</p>
+      <h3 className="text-lg font-semibold text-overlay-foreground mb-2">{title}</h3>
+      <p className="text-overlay-foreground/60 text-sm">{description}</p>
     </div>
   )
 }
 
 function InfoPill({ title, description }: { title: string; description: string }) {
   return (
-    <div className="p-6 bg-white dark:bg-neutral-700 rounded-lg shadow-md">
-      <h3 className="text-xl font-semibold text-yellow-600 dark:text-yellow-500 mb-2">{title}</h3>
+    <div className="p-6 bg-card rounded-lg shadow-md">
+      <h3 className="text-xl font-semibold text-brand-text mb-2">{title}</h3>
       <p className="text-muted-foreground">{description}</p>
     </div>
   )

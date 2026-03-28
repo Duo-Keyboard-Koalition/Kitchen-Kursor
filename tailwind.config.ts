@@ -53,11 +53,37 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Custom NoName colors
-        noname: {
-          yellow: "#FFD700", // Example yellow, adjust as needed
-          black: "#1A1A1A", // Example black
+        // ── Brand ──────────────────────────────────────────────────────
+        brand: {
+          DEFAULT:    "hsl(var(--brand))",
+          hover:      "hsl(var(--brand-hover))",
+          foreground: "hsl(var(--brand-foreground))",
+          text:       "hsl(var(--brand-text))",
+          subtle:     "hsl(var(--brand-subtle))",
         },
+        // ── Overlay (dark contrast sections) ───────────────────────────
+        overlay: {
+          DEFAULT:    "hsl(var(--overlay))",
+          deep:       "hsl(var(--overlay-deep))",
+          foreground: "hsl(var(--overlay-foreground))",
+        },
+        // ── Raised surface (inputs, form panels) ───────────────────────
+        raised: "hsl(var(--raised))",
+        // ── Success / Waste-Saver ───────────────────────────────────────
+        success: {
+          DEFAULT:    "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+          subtle:     "hsl(var(--success-subtle))",
+          border:     "hsl(var(--success-border))",
+          text:       "hsl(var(--success-text))",
+          muted:      "hsl(var(--success-text-muted))",
+        },
+        // ── Layout chrome ───────────────────────────────────────────────
+        nav: {
+          DEFAULT: "hsl(var(--nav))",
+          border:  "hsl(var(--nav-border))",
+        },
+        footer: "hsl(var(--footer))",
       },
       borderRadius: {
         lg: "var(--radius)",

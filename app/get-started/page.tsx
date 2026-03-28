@@ -60,8 +60,8 @@ export default function GetStartedPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-100 dark:bg-neutral-900">
-      <Card className="w-full max-w-md bg-white dark:bg-neutral-800 shadow-xl">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <Card className="w-full max-w-md bg-card shadow-xl">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl">Join Free — Start Saving</CardTitle>
           <CardDescription className="text-muted-foreground">
@@ -77,7 +77,7 @@ export default function GetStartedPage() {
                   id="first-name"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="bg-gray-50 dark:bg-neutral-700"
+                  className="bg-raised"
                   required
                 />
               </div>
@@ -87,7 +87,7 @@ export default function GetStartedPage() {
                   id="last-name"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="bg-gray-50 dark:bg-neutral-700"
+                  className="bg-raised"
                   required
                 />
               </div>
@@ -100,7 +100,7 @@ export default function GetStartedPage() {
                 placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-gray-50 dark:bg-neutral-700"
+                className="bg-raised"
                 required
               />
             </div>
@@ -111,7 +111,7 @@ export default function GetStartedPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="bg-gray-50 dark:bg-neutral-700"
+                className="bg-raised"
                 required
               />
             </div>
@@ -123,24 +123,24 @@ export default function GetStartedPage() {
               />
               <Label htmlFor="terms" className="text-sm text-muted-foreground">
                 I agree to the{" "}
-                <Link href="/terms" className="text-yellow-600 dark:text-yellow-500 hover:underline">
+                <Link href="/terms" className="text-brand-text hover:underline">
                   terms of service
                 </Link>{" "}
                 and{" "}
-                <Link href="/privacy" className="text-yellow-600 dark:text-yellow-500 hover:underline">
+                <Link href="/privacy" className="text-brand-text hover:underline">
                   privacy policy
                 </Link>
               </Label>
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full bg-yellow-500 hover:bg-yellow-600 text-black" disabled={isLoading}>
+            <Button type="submit" className="w-full bg-brand hover:bg-brand-hover text-brand-foreground" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Account
             </Button>
             <div className="text-center text-sm text-muted-foreground">
               Already have an account?{" "}
-              <Link href="/signin" className="text-yellow-600 dark:text-yellow-500 hover:underline">
+              <Link href="/signin" className="text-brand-text hover:underline">
                 Sign in
               </Link>
             </div>
