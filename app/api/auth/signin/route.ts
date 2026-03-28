@@ -27,9 +27,10 @@ export async function POST(request: NextRequest) {
     res.cookies.set(SESSION_COOKIE, token, COOKIE_OPTIONS)
     return res
   } catch (error: any) {
+    const isCredentialError = error.code === "auth/invalid-credential"
     return NextResponse.json(
-      { success: false, error: error.code || "auth/invalid-credential", message: error.message },
-      { status: 401 },
+      { success: false, error: error.code || "SERVER_ERROR", message: error.message },
+      { status: isCredentialError ? 401 : 500 },
     )
   }
 }

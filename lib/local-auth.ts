@@ -1,6 +1,6 @@
-import { pbkdf2Sync, randomBytes } from "crypto"
-import { promises as fs } from "fs"
-import path from "path"
+import { pbkdf2Sync, randomBytes } from "node:crypto"
+import { promises as fs } from "node:fs"
+import path from "node:path"
 
 const USERS_FILE = path.join(process.cwd(), "data/users.json")
 const SESSIONS_FILE = path.join(process.cwd(), "data/sessions.json")
@@ -33,6 +33,7 @@ async function ensureDataDir() {
 
 async function readUsers(): Promise<LocalUser[]> {
   try {
+    await ensureDataDir()
     const data = await fs.readFile(USERS_FILE, "utf-8")
     return JSON.parse(data)
   } catch {
@@ -47,6 +48,7 @@ async function writeUsers(users: LocalUser[]): Promise<void> {
 
 async function readSessions(): Promise<Session[]> {
   try {
+    await ensureDataDir()
     const data = await fs.readFile(SESSIONS_FILE, "utf-8")
     const sessions: Session[] = JSON.parse(data)
     // Prune expired sessions on every read
