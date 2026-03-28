@@ -129,10 +129,10 @@ function ProfilePageContent() {
     if (!user) return
     setIsSaving(true)
     try {
-      const token = await user.getIdToken()
       const res = await fetch("/api/auth/update-profile", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ firstName: editedProfile.firstName, lastName: editedProfile.lastName }),
       })
       const data = await res.json()
@@ -171,13 +171,12 @@ function ProfilePageContent() {
     }
     setIsUploadingPhoto(true)
     try {
-      const token = await user.getIdToken()
       const formData = new FormData()
       formData.append("profilePicture", file)
       formData.append("userId", user.uid)
       const response = await fetch("/api/upload-profile-picture", {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
         body: formData,
       })
       const result: UploadProfilePictureResponse = await response.json()

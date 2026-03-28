@@ -1,21 +1,20 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { promises as fs } from "fs"
-import path from "path"
-import { getSessionUser, updateUser } from "@/lib/local-auth"
+import { promises as fs } from "node:fs"
+import path from "node:path"
+import { getSessionUser, updateUser, SESSION_COOKIE } from "@/lib/local-auth"
 import type { UploadProfilePictureResponse } from "@/models/api"
 
 const UPLOAD_DIR = path.join(process.cwd(), "public/uploads/profiles")
 
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization")
-    if (!authHeader?.startsWith("Bearer ")) {
+    const token = request.cookies.get(SESSION_COOKIE)?.value
+    if (!token) {
       return NextResponse.json(
-        { success: false, error: "UNAUTHORIZED", message: "Authorization token required" } as UploadProfilePictureResponse,
+        { success: false, error: "UNAUTHORIZED", message: "Not signed in" } as UploadProfilePictureResponse,
         { status: 401 },
       )
     }
-    const token = authHeader.split("Bearer ")[1]
     const sessionUser = await getSessionUser(token)
     if (!sessionUser) {
       return NextResponse.json(
@@ -101,13 +100,3 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function OPTIONS(request: NextRequest) {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    },
-  })
-}
