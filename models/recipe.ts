@@ -9,13 +9,17 @@ export interface Recipe {
   fullRecipe: string
   ingredients: RecipeIngredient[]
   imageUrl: string
-  createdAt: Date | FirebaseTimestamp
+  createdAt: Date | string
   likes: number
   shortSupply?: boolean
   tags?: string[]
   difficulty?: "easy" | "medium" | "hard"
-  cookingTime?: number // in minutes
+  cookingTime?: number     // in minutes
   servings?: number
+  wasteSaver?: boolean     // Uses near-expiry NoName ingredients — earns bonus PCO points
+  pcoBonus?: number        // Bonus PCO points awarded on purchase (e.g. 250)
+  costPerServing?: number  // Estimated cost per serving in dollars
+  shareCount?: number      // Social share counter
 }
 
 export interface RecipeIngredient {
@@ -34,12 +38,6 @@ export interface StoreProduct {
   imageUrl: string
   category?: string
   inStock?: boolean
-}
-
-// For Firebase Timestamp compatibility
-export interface FirebaseTimestamp {
-  seconds: number
-  nanoseconds: number
 }
 
 // Request/Response types for API endpoints

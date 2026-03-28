@@ -7,9 +7,9 @@ export interface UserProfile {
   lastName?: string
   displayName?: string
   photoURL?: string
-  photoPath?: string // Path in Firebase Storage for cleanup
-  createdAt?: Date | FirebaseTimestamp
-  updatedAt?: Date | FirebaseTimestamp
+  photoPath?: string
+  createdAt?: string
+  updatedAt?: string
   preferences?: UserPreferences
 }
 
@@ -52,10 +52,4 @@ export interface AuthResponse {
   token?: string
   error?: string
   message?: string
-}
-
-// For Firebase Timestamp compatibility
-export interface FirebaseTimestamp {
-  seconds: number
-  nanoseconds: number
 }

@@ -1,25 +1,14 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
-import {
-  onAuthStateChanged,
-  type User,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut as firebaseSignOut,
-} from "firebase/auth"
-import { auth, db } from "@/lib/firebase"
-import { doc, setDoc, getDoc } from "firebase/firestore"
-import type { FirebaseError } from "firebase/app"
 
-interface AuthContextType {
-  user: User | null
-  loading: boolean
-  signUp: (email: string, password: string, firstName?: string, lastName?: string) => Promise<User | null>
-  signIn: (email: string, password: string) => Promise<User | null>
-  signOut: () => Promise<void>
-  // Add a field for user profile data if needed
-  userProfile: UserProfile | null
+export interface LocalAuthUser {
+  uid: string
+  email: string | null
+  photoURL: string | null
+  metadata: { creationTime: string }
+  // No-op — token lives in an HTTP-only cookie, not accessible to JS
+  getIdToken: () => Promise<string>
 }
 
 interface UserProfile {
@@ -27,37 +16,53 @@ interface UserProfile {
   email: string | null
   firstName?: string
   lastName?: string
-  // Add other profile fields as needed
+  photoURL?: string
+}
+
+interface AuthContextType {
+  user: LocalAuthUser | null
+  loading: boolean
+  signUp: (email: string, password: string, firstName?: string, lastName?: string) => Promise<LocalAuthUser | null>
+  signIn: (email: string, password: string) => Promise<LocalAuthUser | null>
+  signOut: () => Promise<void>
+  userProfile: UserProfile | null
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+function buildUser(data: any): LocalAuthUser {
+  return {
+    uid: data.uid,
+    email: data.email,
+    photoURL: data.photoURL || null,
+    metadata: { creationTime: data.createdAt },
+    getIdToken: async () => "",
+  }
+}
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<LocalAuthUser | null>(null)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // On mount, check if the session cookie is valid
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        setUser(firebaseUser)
-        // Fetch user profile from Firestore
-        const userDocRef = doc(db, "users", firebaseUser.uid)
-        const userDocSnap = await getDoc(userDocRef)
-        if (userDocSnap.exists()) {
-          setUserProfile(userDocSnap.data() as UserProfile)
-        } else {
-          // Potentially create a basic profile if it doesn't exist
-          setUserProfile({ uid: firebaseUser.uid, email: firebaseUser.email })
+    fetch("/api/auth/me", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && data.user) {
+          setUser(buildUser(data.user))
+          setUserProfile({
+            uid: data.user.uid,
+            email: data.user.email,
+            firstName: data.user.firstName,
+            lastName: data.user.lastName,
+            photoURL: data.user.photoURL,
+          })
         }
-      } else {
-        setUser(null)
-        setUserProfile(null)
-      }
-      setLoading(false)
-    })
-
-    return () => unsubscribe()
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
   }, [])
 
   const signUp = async (
@@ -65,47 +70,58 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     password: string,
     firstName?: string,
     lastName?: string,
-  ): Promise<User | null> => {
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
-      const firebaseUser = userCredential.user
-      // Create user document in Firestore
-      const userDocRef = doc(db, "users", firebaseUser.uid)
-      const profileData: UserProfile = {
-        uid: firebaseUser.uid,
-        email: firebaseUser.email,
-        firstName: firstName || "",
-        lastName: lastName || "",
-      }
-      await setDoc(userDocRef, profileData)
-      setUserProfile(profileData)
-      return firebaseUser
-    } catch (error) {
-      const firebaseError = error as FirebaseError
-      console.error("Error signing up:", firebaseError.message)
-      // Handle specific errors (e.g., email-already-in-use)
-      throw firebaseError // Re-throw to be caught by the calling component
+  ): Promise<LocalAuthUser | null> => {
+    const res = await fetch("/api/auth/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ email, password, firstName, lastName }),
+    })
+    const data = await res.json()
+    if (!data.success) {
+      throw Object.assign(new Error(data.message), { code: data.error })
     }
+    const authUser = buildUser(data.user)
+    setUser(authUser)
+    setUserProfile({
+      uid: data.user.uid,
+      email: data.user.email,
+      firstName: data.user.firstName,
+      lastName: data.user.lastName,
+    })
+    return authUser
   }
 
-  const signIn = async (email: string, password: string): Promise<User | null> => {
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password)
-      return userCredential.user
-    } catch (error) {
-      const firebaseError = error as FirebaseError
-      console.error("Error signing in:", firebaseError.message)
-      // Handle specific errors (e.g., user-not-found, wrong-password)
-      throw firebaseError
+  const signIn = async (email: string, password: string): Promise<LocalAuthUser | null> => {
+    const res = await fetch("/api/auth/signin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ email, password }),
+    })
+    const data = await res.json()
+    if (!data.success) {
+      throw Object.assign(new Error(data.message), { code: data.error })
     }
+    const authUser = buildUser(data.user)
+    setUser(authUser)
+    setUserProfile({
+      uid: data.user.uid,
+      email: data.user.email,
+      firstName: data.user.firstName,
+      lastName: data.user.lastName,
+      photoURL: data.user.photoURL,
+    })
+    return authUser
   }
 
   const signOut = async () => {
-    try {
-      await firebaseSignOut(auth)
-    } catch (error) {
-      console.error("Error signing out:", error)
-    }
+    await fetch("/api/auth/signout", {
+      method: "POST",
+      credentials: "include",
+    }).catch(() => {})
+    setUser(null)
+    setUserProfile(null)
   }
 
   return (

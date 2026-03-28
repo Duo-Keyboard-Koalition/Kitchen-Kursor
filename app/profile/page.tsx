@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect, useRef, type FormEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -33,9 +32,7 @@ import Image from "next/image"
 import { useAuth } from "@/context/auth-context"
 import { useRouter } from "next/navigation"
 import ProtectedRoute from "@/components/protected-route"
-import { doc, updateDoc, collection, query, where, getDocs, orderBy } from "firebase/firestore"
-import { db } from "@/lib/firebase"
-import type { Recipe, UploadProfilePictureResponse } from "@/models"
+import type { FirestoreRecord, UploadProfilePictureResponse } from "@/models/api"
 
 interface UserStats {
   recipesUploaded: number
@@ -50,7 +47,6 @@ function ProfilePageContent() {
   const { toast } = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Profile editing state
   const [isEditing, setIsEditing] = useState(false)
   const [editedProfile, setEditedProfile] = useState({
     firstName: userProfile?.firstName || "",
@@ -58,23 +54,19 @@ function ProfilePageContent() {
     email: userProfile?.email || "",
   })
 
-  // Profile picture state
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
   const [currentPhotoURL, setCurrentPhotoURL] = useState<string | null>(null)
 
-  // User stats and recipes
   const [userStats, setUserStats] = useState<UserStats>({
     recipesUploaded: 0,
     totalLikes: 0,
     joinedDate: "",
     favoriteRecipes: 0,
   })
-  const [userRecipes, setUserRecipes] = useState<Recipe[]>([])
-  const [isLoadingStats, setIsLoadingStats] = useState(true)
+  const [userRecipes, setUserRecipes] = useState<FirestoreRecord[]>([])
   const [isLoadingRecipes, setIsLoadingRecipes] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
 
-  // Notification preferences
   const [notifications, setNotifications] = useState({
     emailNotifications: true,
     pushNotifications: false,
@@ -82,7 +74,6 @@ function ProfilePageContent() {
     communityActivity: false,
   })
 
-  // Privacy settings
   const [privacy, setPrivacy] = useState({
     profileVisibility: "public" as "public" | "private" | "friends",
     showEmail: false,
@@ -96,11 +87,7 @@ function ProfilePageContent() {
         lastName: userProfile.lastName || "",
         email: userProfile.email || "",
       })
-
-      // Set current photo URL
-      setCurrentPhotoURL(userProfile.photoURL || user?.photoURL || null)
-
-      // Set join date from user creation
+      setCurrentPhotoURL(userProfile.photoURL || null)
       if (user?.metadata?.creationTime) {
         setUserStats((prev) => ({
           ...prev,
@@ -112,56 +99,24 @@ function ProfilePageContent() {
 
   useEffect(() => {
     if (user) {
-      fetchUserStats()
       fetchUserRecipes()
     }
   }, [user])
 
-  const fetchUserStats = async () => {
-    if (!user) return
-
-    setIsLoadingStats(true)
-    try {
-      // Fetch user's recipes to calculate stats
-      const recipesQuery = query(
-        collection(db, "recipes"),
-        where("userId", "==", user.uid),
-        orderBy("createdAt", "desc"),
-      )
-
-      const recipesSnapshot = await getDocs(recipesQuery)
-      const recipes = recipesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Recipe[]
-
-      const totalLikes = recipes.reduce((sum, recipe) => sum + (recipe.likes || 0), 0)
-
-      setUserStats((prev) => ({
-        ...prev,
-        recipesUploaded: recipes.length,
-        totalLikes,
-        favoriteRecipes: 0, // This would need to be implemented separately
-      }))
-    } catch (error) {
-      console.error("Error fetching user stats:", error)
-    } finally {
-      setIsLoadingStats(false)
-    }
-  }
-
   const fetchUserRecipes = async () => {
     if (!user) return
-
     setIsLoadingRecipes(true)
     try {
-      const recipesQuery = query(
-        collection(db, "recipes"),
-        where("userId", "==", user.uid),
-        orderBy("createdAt", "desc"),
-      )
-
-      const recipesSnapshot = await getDocs(recipesQuery)
-      const recipes = recipesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Recipe[]
-
-      setUserRecipes(recipes)
+      const res = await fetch(`/api/get-recipes?userId=${user.uid}&limit=100`)
+      const data = await res.json()
+      if (data.success && data.data) {
+        setUserRecipes(data.data)
+        setUserStats((prev) => ({
+          ...prev,
+          recipesUploaded: data.data.length,
+          totalLikes: 0,
+        }))
+      }
     } catch (error) {
       console.error("Error fetching user recipes:", error)
     } finally {
@@ -172,30 +127,21 @@ function ProfilePageContent() {
   const handleSaveProfile = async (e: FormEvent) => {
     e.preventDefault()
     if (!user) return
-
     setIsSaving(true)
     try {
-      const userDocRef = doc(db, "users", user.uid)
-      await updateDoc(userDocRef, {
-        firstName: editedProfile.firstName,
-        lastName: editedProfile.lastName,
-        updatedAt: new Date(),
+      const token = await user.getIdToken()
+      const res = await fetch("/api/auth/update-profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ firstName: editedProfile.firstName, lastName: editedProfile.lastName }),
       })
-
-      toast({
-        title: "Profile Updated",
-        description: "Your profile information has been saved successfully.",
-        variant: "success",
-      })
-
+      const data = await res.json()
+      if (!data.success) throw new Error(data.message || "Failed to update profile")
+      toast({ title: "Profile Updated", description: "Your profile information has been saved successfully.", variant: "success" })
       setIsEditing(false)
     } catch (error) {
       console.error("Error updating profile:", error)
-      toast({
-        title: "Update Failed",
-        description: "Could not update your profile. Please try again.",
-        variant: "destructive",
-      })
+      toast({ title: "Update Failed", description: "Could not update your profile. Please try again.", variant: "destructive" })
     } finally {
       setIsSaving(false)
     }
@@ -212,70 +158,35 @@ function ProfilePageContent() {
 
   const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files || !event.target.files[0] || !user) return
-
     const file = event.target.files[0]
-
-    // Validate file type
     const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"]
     if (!allowedTypes.includes(file.type)) {
-      toast({
-        title: "Invalid File Type",
-        description: "Please select a valid image file (JPG, PNG, GIF, WebP).",
-        variant: "destructive",
-      })
+      toast({ title: "Invalid File Type", description: "Please select a valid image file (JPG, PNG, GIF, WebP).", variant: "destructive" })
       return
     }
-
-    // Validate file size (5MB limit)
-    const maxFileSize = 5 * 1024 * 1024 // 5MB
+    const maxFileSize = 5 * 1024 * 1024
     if (file.size > maxFileSize) {
-      toast({
-        title: "File Too Large",
-        description: "Profile picture must be smaller than 5MB.",
-        variant: "destructive",
-      })
+      toast({ title: "File Too Large", description: "Profile picture must be smaller than 5MB.", variant: "destructive" })
       return
     }
-
     setIsUploadingPhoto(true)
-
     try {
-      // Get user's ID token for authentication
-      const idToken = await user.getIdToken()
-
-      // Create form data
+      const token = await user.getIdToken()
       const formData = new FormData()
       formData.append("profilePicture", file)
       formData.append("userId", user.uid)
-
-      // Upload to our API
       const response = await fetch("/api/upload-profile-picture", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${idToken}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       })
-
       const result: UploadProfilePictureResponse = await response.json()
-
       if (!response.ok || !result.success) {
         throw new Error(result.message || "Failed to upload profile picture")
       }
-
-      // Update local state with new photo URL
       setCurrentPhotoURL(result.photoURL || null)
-
-      toast({
-        title: "Profile Picture Updated",
-        description: "Your profile picture has been updated successfully!",
-        variant: "success",
-      })
-
-      // Clear the file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ""
-      }
+      toast({ title: "Profile Picture Updated", description: "Your profile picture has been updated successfully!", variant: "success" })
+      if (fileInputRef.current) fileInputRef.current.value = ""
     } catch (error) {
       console.error("Error uploading profile picture:", error)
       toast({
@@ -319,15 +230,8 @@ function ProfilePageContent() {
                 >
                   {isUploadingPhoto ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
                 </Button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoUpload}
-                  className="hidden"
-                />
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
               </div>
-
               <div className="flex-1 text-center md:text-left">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                   <div>
@@ -360,28 +264,24 @@ function ProfilePageContent() {
                 <ChefHat className="w-8 h-8 text-yellow-500" />
                 <div>
                   <p className="text-2xl font-bold">
-                    {isLoadingStats ? <Loader2 className="w-6 h-6 animate-spin" /> : userStats.recipesUploaded}
+                    {isLoadingRecipes ? <Loader2 className="w-6 h-6 animate-spin" /> : userStats.recipesUploaded}
                   </p>
                   <p className="text-sm text-muted-foreground">Recipes Shared</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-
           <Card className="bg-white dark:bg-neutral-800">
             <CardContent className="pt-6">
               <div className="flex items-center space-x-2">
                 <Heart className="w-8 h-8 text-red-500" />
                 <div>
-                  <p className="text-2xl font-bold">
-                    {isLoadingStats ? <Loader2 className="w-6 h-6 animate-spin" /> : userStats.totalLikes}
-                  </p>
+                  <p className="text-2xl font-bold">{userStats.totalLikes}</p>
                   <p className="text-sm text-muted-foreground">Total Likes</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-
           <Card className="bg-white dark:bg-neutral-800">
             <CardContent className="pt-6">
               <div className="flex items-center space-x-2">
@@ -504,19 +404,19 @@ function ProfilePageContent() {
                       <Card key={recipe.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                         <div className="relative h-32">
                           <Image
-                            src={recipe.imageUrl || "/placeholder.svg"}
-                            alt={recipe.recipeName}
+                            src={recipe.imageURL || "/placeholder.svg"}
+                            alt={recipe.name}
                             fill
                             className="object-cover"
                           />
                         </div>
                         <CardContent className="p-4">
-                          <h3 className="font-semibold truncate">{recipe.recipeName}</h3>
-                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{recipe.briefIngredients}</p>
+                          <h3 className="font-semibold truncate">{recipe.name}</h3>
+                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{recipe.description}</p>
                           <div className="flex items-center justify-between mt-3">
                             <div className="flex items-center space-x-1">
                               <Heart className="w-4 h-4 text-red-500" />
-                              <span className="text-sm">{recipe.likes || 0}</span>
+                              <span className="text-sm">0</span>
                             </div>
                             <Button variant="outline" size="sm" onClick={() => router.push(`/recipes/${recipe.id}`)}>
                               View
@@ -544,7 +444,6 @@ function ProfilePageContent() {
 
           {/* Settings Tab */}
           <TabsContent value="settings" className="space-y-6">
-            {/* Notification Settings */}
             <Card className="bg-white dark:bg-neutral-800">
               <CardHeader>
                 <CardTitle className="flex items-center">
@@ -562,9 +461,7 @@ function ProfilePageContent() {
                   <Switch
                     id="email-notifications"
                     checked={notifications.emailNotifications}
-                    onCheckedChange={(checked) =>
-                      setNotifications((prev) => ({ ...prev, emailNotifications: checked }))
-                    }
+                    onCheckedChange={(checked) => setNotifications((prev) => ({ ...prev, emailNotifications: checked }))}
                   />
                 </div>
                 <Separator />
@@ -606,7 +503,6 @@ function ProfilePageContent() {
               </CardContent>
             </Card>
 
-            {/* Privacy Settings */}
             <Card className="bg-white dark:bg-neutral-800">
               <CardHeader>
                 <CardTitle className="flex items-center">

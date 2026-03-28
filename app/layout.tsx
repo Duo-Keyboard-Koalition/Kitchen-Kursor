@@ -10,8 +10,8 @@ import { AuthProvider } from "@/context/auth-context" // Import AuthProvider
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "NoName Recipes - Share, Cook, Earn!",
-  description: "Share your favorite recipes, discover new ones, and earn PCO points with NoName Products.",
+  title: "NoName Recipes - Eat Well, Spend Less, Earn PCO Points",
+  description: "The free student platform that fights rising grocery prices. Budget recipes, automatic NoName ingredient matching, and PCO points on every purchase.",
   icons: {
     icon: "/favicon.ico",
   },

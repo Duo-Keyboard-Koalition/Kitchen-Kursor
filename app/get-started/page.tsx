@@ -11,7 +11,6 @@ import { useState, type FormEvent } from "react"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
 import { Loader2 } from "lucide-react"
-import type { FirebaseError } from "firebase/app"
 
 export default function GetStartedPage() {
   const { signUp } = useAuth()
@@ -42,13 +41,12 @@ export default function GetStartedPage() {
         description: "Welcome to NoName Recipes! You're now signed in.",
         variant: "success",
       })
-      router.push("/") // Redirect to home page after successful sign up
-    } catch (error) {
-      const firebaseError = error as FirebaseError
+      router.push("/")
+    } catch (error: any) {
       let errorMessage = "Failed to create account. Please try again."
-      if (firebaseError.code === "auth/email-already-in-use") {
+      if (error.code === "auth/email-already-in-use") {
         errorMessage = "This email is already in use. Please try a different email or sign in."
-      } else if (firebaseError.code === "auth/weak-password") {
+      } else if (error.code === "auth/weak-password") {
         errorMessage = "The password is too weak. Please choose a stronger password."
       }
       toast({
@@ -56,7 +54,6 @@ export default function GetStartedPage() {
         description: errorMessage,
         variant: "destructive",
       })
-      console.error("Sign up error:", firebaseError)
     } finally {
       setIsLoading(false)
     }
@@ -66,8 +63,10 @@ export default function GetStartedPage() {
     <div className="min-h-screen flex items-center justify-center p-4 bg-gray-100 dark:bg-neutral-900">
       <Card className="w-full max-w-md bg-white dark:bg-neutral-800 shadow-xl">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl">Create an account</CardTitle>
-          <CardDescription className="text-muted-foreground">Join NoName Recipes today!</CardDescription>
+          <CardTitle className="text-2xl">Join Free — Start Saving</CardTitle>
+          <CardDescription className="text-muted-foreground">
+            Budget recipes + NoName prices + PCO points. Free for students, always.
+          </CardDescription>
         </CardHeader>
         <form onSubmit={handleSignUp}>
           <CardContent className="space-y-4">

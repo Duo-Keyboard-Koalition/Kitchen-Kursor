@@ -134,6 +134,13 @@ export interface FirestoreRecord {
   description: string
   createdAt: string // ISO string instead of Firestore timestamp
   userId?: string
+  // Waste reduction & budget fields
+  wasteSaver?: boolean        // Recipe uses near-expiry NoName ingredients
+  pcoBonus?: number           // Extra PCO points earned (e.g. 250 = bonus 250 pts)
+  costPerServing?: number     // Estimated cost per serving in dollars
+  servings?: number
+  shareCount?: number         // How many times this recipe has been shared
+  likes?: number
   metadata?: {
     originalFileName: string
     fileSize: number

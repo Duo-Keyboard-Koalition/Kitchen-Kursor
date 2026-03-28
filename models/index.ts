@@ -5,7 +5,6 @@ export type {
   Recipe,
   RecipeIngredient,
   StoreProduct,
-  FirebaseTimestamp,
   UploadRecipeRequest,
   UploadRecipeFormData,
   UploadRecipeResponse,
@@ -46,6 +45,3 @@ export type {
 } from "./api"
 
 export { HttpStatusCode } from "./api"
-
-// Re-export commonly used types for convenience
-export type { FirebaseTimestamp } from "./recipe"

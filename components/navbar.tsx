@@ -96,11 +96,11 @@ export default function Navbar() {
         </nav>
 
         <div className="flex items-center space-x-3">
-          <Link href="/cart" asChild>
-            <Button variant="ghost" size="icon" aria-label="Shopping Cart">
+          <Button variant="ghost" size="icon" aria-label="Shopping Cart" asChild>
+            <Link href="/cart">
               <ShoppingCart className="h-5 w-5" />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
           <ModeToggle />
           {loading ? (
             <Button variant="outline" size="sm" disabled>
@@ -112,9 +112,9 @@ export default function Navbar() {
               <span>Sign Out</span>
             </Button>
           ) : (
-            <Link href="/signin" asChild>
-              <Button className="hidden sm:inline-flex bg-yellow-500 hover:bg-yellow-600 text-black">Sign In</Button>
-            </Link>
+            <Button className="hidden sm:inline-flex bg-yellow-500 hover:bg-yellow-600 text-black" asChild>
+              <Link href="/signin">Sign In</Link>
+            </Button>
           )}
         </div>
       </div>

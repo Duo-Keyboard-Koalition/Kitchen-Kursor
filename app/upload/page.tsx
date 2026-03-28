@@ -7,35 +7,40 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-
-import { UploadCloud, Wand2, Edit3, CheckCircle, AlertTriangle, Loader2, PlusCircle, Trash2, Clock, ChefHat, Globe, Leaf } from "lucide-react"
-n
+import {
+  UploadCloud,
+  Wand2,
+  Edit3,
+  CheckCircle,
+  AlertTriangle,
+  Loader2,
+  PlusCircle,
+  Trash2,
+  Clock,
+  ChefHat,
+  Globe,
+  Leaf,
+  Gift,
+} from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import Image from "next/image"
 import { useAuth } from "@/context/auth-context"
 import { useRouter } from "next/navigation"
-
-import { storage, db } from "@/lib/firebase" // For Firebase storage and Firestore
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
-import { collection, addDoc, serverTimestamp } from "firebase/firestore"
-import { aiService, type AIRecipeAnalysis, type AIIngredient, type AIProductMatch } from "@/lib/ai-service"
+import { aiService, type AIRecipeAnalysis } from "@/lib/ai-service"
+import ProtectedRoute from "@/components/protected-route"
 
 interface Ingredient {
   id: string
   name: string
   quantity: string
-  storeProduct?: StoreProduct // Matched store product
+  storeProduct?: StoreProduct
 }
 
-import ProtectedRoute from "@/components/protected-route"
-
-
-// Response type from your Firebase function
-interface StoreRecipeResponse {
+interface StoreProduct {
   id: string
   name: string
-  description: string
-  imagePath: string
+  price: string
+  imageUrl: string
 }
 
 function UploadRecipePageContent() {
@@ -43,54 +48,33 @@ function UploadRecipePageContent() {
   const router = useRouter()
   const { toast } = useToast()
 
-
-  const devMode = process.env.NEXT_PUBLIC_DEV_MODE === "true";
-  if (devMode) {
-    // skip auth checks or set a mock user
-  }
-
-
   const [recipeName, setRecipeName] = useState("")
   const [recipeDescription, setRecipeDescription] = useState("")
   const [recipeImage, setRecipeImage] = useState<File | null>(null)
   const [recipeImageUrl, setRecipeImageUrl] = useState<string | null>(null)
-
   const [briefIngredients, setBriefIngredients] = useState("")
   const [generatedRecipe, setGeneratedRecipe] = useState<string | null>(null)
   const [extractedIngredients, setExtractedIngredients] = useState<Ingredient[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
   const [isEditingRecipe, setIsEditingRecipe] = useState(false)
   const [editedRecipe, setEditedRecipe] = useState("")
-  
-  // New state for AI analysis
   const [aiAnalysis, setAiAnalysis] = useState<AIRecipeAnalysis | null>(null)
-
+  const [isWasteSaver, setIsWasteSaver] = useState(false)
+  const [costPerServing, setCostPerServing] = useState("")
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0]
-
-      // Validate file type
       if (!file.type.startsWith("image/")) {
-        toast({
-          title: "Invalid File Type",
-          description: "Please select a valid image file.",
-          variant: "destructive",
-        })
+        toast({ title: "Invalid File Type", description: "Please select a valid image file.", variant: "destructive" })
         return
       }
-
-      // Validate file size (5MB limit)
-      const maxFileSize = 5 * 1024 * 1024 // 5MB
+      const maxFileSize = 5 * 1024 * 1024
       if (file.size > maxFileSize) {
-        toast({
-          title: "File Too Large",
-          description: "Image file must be smaller than 5MB.",
-          variant: "destructive",
-        })
+        toast({ title: "File Too Large", description: "Image file must be smaller than 5MB.", variant: "destructive" })
         return
       }
-
       setRecipeImage(file)
       setRecipeImageUrl(URL.createObjectURL(file))
     }
@@ -98,16 +82,10 @@ function UploadRecipePageContent() {
 
   const handleUploadRecipe = async (e: FormEvent) => {
     e.preventDefault()
-
     if (!user) {
-      toast({
-        title: "Not Authenticated",
-        description: "Please sign in first.",
-        variant: "destructive",
-      })
+      toast({ title: "Not Authenticated", description: "Please sign in first.", variant: "destructive" })
       return
     }
-
     if (!recipeName.trim() || !recipeDescription.trim() || !recipeImage) {
       toast({
         title: "Missing Information",
@@ -116,73 +94,56 @@ function UploadRecipePageContent() {
       })
       return
     }
-
-
     setIsLoading(true)
-    
     try {
-      // Use AI service to analyze ingredients and generate recipe
       const analysis = await aiService.analyzeIngredients(briefIngredients, recipeName)
       setAiAnalysis(analysis)
-
-      // Generate recipe using AI analysis
       const aiGeneratedRecipe = generateRecipeFromAnalysis(analysis, recipeName)
       setGeneratedRecipe(aiGeneratedRecipe)
       setEditedRecipe(aiGeneratedRecipe)
-
-      // Convert AI ingredients to our format
       const ingredients: Ingredient[] = analysis.ingredients.map((aiIng, index) => ({
         id: `ing-${index}-${Date.now()}`,
         name: aiIng.name,
         quantity: `${aiIng.quantity} ${aiIng.unit}`,
-        storeProduct: analysis.productMatches.find(match => match.category === aiIng.category) ? {
-          id: analysis.productMatches.find(match => match.category === aiIng.category)!.id,
-          name: analysis.productMatches.find(match => match.category === aiIng.category)!.name,
-          price: analysis.productMatches.find(match => match.category === aiIng.category)!.price,
-          imageUrl: analysis.productMatches.find(match => match.category === aiIng.category)!.imageUrl,
-        } : undefined,
+        storeProduct: analysis.productMatches.find((match) => match.category === aiIng.category)
+          ? {
+              id: analysis.productMatches.find((match) => match.category === aiIng.category)!.id,
+              name: analysis.productMatches.find((match) => match.category === aiIng.category)!.name,
+              price: analysis.productMatches.find((match) => match.category === aiIng.category)!.price,
+              imageUrl: analysis.productMatches.find((match) => match.category === aiIng.category)!.imageUrl,
+            }
+          : undefined,
       }))
-      
       setExtractedIngredients(ingredients)
-
       toast({
         title: "AI Recipe Generated!",
         description: "Our AI has analyzed your ingredients and generated a smart recipe with product matches.",
       })
     } catch (error) {
       console.error("Error generating recipe:", error)
-      toast({
-        title: "Generation Failed",
-        description: "Could not generate recipe. Please try again.",
-        variant: "destructive",
-      })
+      toast({ title: "Generation Failed", description: "Could not generate recipe. Please try again.", variant: "destructive" })
     } finally {
       setIsLoading(false)
     }
   }
 
-  const generateRecipeFromAnalysis = (analysis: AIRecipeAnalysis, recipeName: string): string => {
+  const generateRecipeFromAnalysis = (analysis: AIRecipeAnalysis, name: string): string => {
     const { ingredients, cookingTime, difficulty, cuisine, dietaryInfo } = analysis
-    
-    let recipe = `# ${recipeName}\n\n`
+    let recipe = `# ${name}\n\n`
     recipe += `**Cuisine:** ${cuisine} | **Difficulty:** ${difficulty} | **Time:** ${cookingTime}\n`
-    
     if (dietaryInfo.length > 0) {
-      recipe += `**Dietary:** ${dietaryInfo.join(', ')}\n\n`
+      recipe += `**Dietary:** ${dietaryInfo.join(", ")}\n\n`
     }
-    
     recipe += `## Ingredients\n`
-    ingredients.forEach(ing => {
+    ingredients.forEach((ing) => {
       recipe += `- ${ing.quantity} ${ing.unit} ${ing.name} (${ing.category})\n`
     })
-    
     recipe += `\n## Instructions\n`
     recipe += `1. Prepare all ingredients as listed above.\n`
     recipe += `2. Follow standard cooking procedures for ${cuisine.toLowerCase()} cuisine.\n`
     recipe += `3. Cook for approximately ${cookingTime}.\n`
     recipe += `4. Season to taste and serve hot.\n\n`
     recipe += `**Tip:** This ${difficulty.toLowerCase()} recipe is perfect for ${cuisine.toLowerCase()} cuisine lovers!`
-    
     return recipe
   }
 
@@ -190,83 +151,45 @@ function UploadRecipePageContent() {
     setExtractedIngredients((prev) => prev.map((ing) => (ing.id === id ? { ...ing, [field]: value } : ing)))
   }
 
+  const handleRemoveIngredient = (id: string) => {
+    setExtractedIngredients((prev) => prev.filter((ing) => ing.id !== id))
+  }
 
-    try {
-      // Temporary: Mock the API response for testing
-      // Remove this when CORS is fixed
-      const isDevelopment = process.env.NODE_ENV === "development"
+  const handleAddIngredient = () => {
+    setExtractedIngredients((prev) => [...prev, { id: `ing-${Date.now()}`, name: "", quantity: "" }])
+  }
 
-      if (isDevelopment) {
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 2000))
-
-        // Mock successful response
-        const mockResult: StoreRecipeResponse = {
-          id: `mock-${Date.now()}`,
-          name: recipeName.trim(),
-          description: recipeDescription.trim(),
-          imagePath: `mock/path/${recipeImage.name}`,
-        }
-
-        return ing
-      }),
-    )
+  const handleSwapIngredient = (_id: string) => {
     toast({ title: "Ingredient Swapped!", variant: "default" })
   }
 
-
-        setUploadSuccess(mockResult)
-
-        toast({
-          title: "Recipe Uploaded Successfully! (Mock)",
-          description: `Your recipe "${mockResult.name}" has been saved with ID: ${mockResult.id}`,
-          variant: "success",
-        })
-
-        return
-      }
-
-      // Actual API call (when CORS is fixed)
+  const handleSubmitRecipe = async () => {
+    if (!user || !recipeImage) return
+    setIsUploading(true)
+    try {
+      const token = await user.getIdToken()
       const formData = new FormData()
       formData.append("name", recipeName.trim())
-      formData.append("description", recipeDescription.trim())
-      formData.append("picture", recipeImage)
+      formData.append("description", editedRecipe || recipeDescription.trim())
+      formData.append("image", recipeImage)
+      formData.append("userId", user.uid)
+      formData.append("wasteSaver", String(isWasteSaver))
+      formData.append("pcoBonus", isWasteSaver ? "250" : "0")
+      if (costPerServing) formData.append("costPerServing", costPerServing)
 
-      const response = await fetch(STORE_RECIPE_URL, {
+      const response = await fetch("/api/upload-recipe-complete", {
         method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
-        mode: "cors",
       })
 
-      if (!response.ok) {
-        let errorMessage = `HTTP ${response.status}: ${response.statusText}`
-
-        if (response.status === 405) {
-          errorMessage = "Method not allowed. The API endpoint may have CORS restrictions."
-        } else if (response.status === 0) {
-          errorMessage = "Network error. This is likely a CORS issue with the API endpoint."
-        }
-
-        try {
-          const errorData = await response.json()
-          errorMessage = errorData.error || errorMessage
-        } catch {
-          // If we can't parse JSON, use the default message
-        }
-
-        throw new Error(errorMessage)
+      const result = await response.json()
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Failed to upload recipe")
       }
 
-      const result: StoreRecipeResponse = await response.json()
-      setUploadSuccess(result)
-
-      toast({
-
-        title: "Recipe Submitted!",
-        description: `Your recipe "${recipeName}" is now live! Doc ID: ${docRef.id}`,
-        variant: "default",
-
-      })
+      toast({ title: "Recipe Submitted!", description: `Your recipe "${recipeName}" is now live!`, variant: "default" })
+      router.push("/recipes")
     } catch (error) {
       console.error("Error uploading recipe:", error)
       toast({
@@ -279,62 +202,18 @@ function UploadRecipePageContent() {
     }
   }
 
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to upload a recipe.",
-        variant: "destructive",
-      })
-      router.push("/signin")
-    }
-  }, [user, authLoading, router])
-
-  if (authLoading) {
-
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Card className="max-w-2xl mx-auto bg-white dark:bg-neutral-800">
-          <CardHeader className="text-center">
-            <div className="mx-auto w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mb-4">
-              <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
-            </div>
-            <CardTitle className="text-2xl text-green-600 dark:text-green-400">Recipe Uploaded Successfully!</CardTitle>
-            <CardDescription>Your recipe has been saved and is now available in the system.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="p-4 bg-gray-50 dark:bg-neutral-700 rounded-lg">
-              <h3 className="font-semibold text-lg mb-2">{uploadSuccess.name}</h3>
-              <p className="text-sm text-muted-foreground mb-2">{uploadSuccess.description}</p>
-              <p className="text-xs text-muted-foreground">Recipe ID: {uploadSuccess.id}</p>
-              <p className="text-xs text-muted-foreground">Image Path: {uploadSuccess.imagePath}</p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button onClick={handleUploadAnother} className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black">
-                <UploadCloud className="mr-2 h-4 w-4" />
-                Upload Another Recipe
-              </Button>
-              <Button onClick={handleViewRecipes} variant="outline" className="sm:w-auto">
-                View All Recipes
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
   return (
     <div className="container mx-auto px-4 py-8">
       <Card className="max-w-2xl mx-auto bg-white dark:bg-neutral-800">
         <CardHeader>
           <CardTitle className="text-2xl flex items-center">
             <UploadCloud className="w-6 h-6 mr-2 text-yellow-500" />
-            Upload Your Recipe
+            Share a Recipe
           </CardTitle>
-          <CardDescription>Share your culinary creations with the NoName Recipes community.</CardDescription>
+          <CardDescription>
+            Every recipe you share helps a student cook at home instead of ordering out — and moves NoName
+            ingredients that would otherwise go to waste. Cook it. Share it. Earn points for it.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleUploadRecipe} className="space-y-6">
@@ -346,7 +225,19 @@ function UploadRecipePageContent() {
                 onChange={(e) => setRecipeName(e.target.value)}
                 placeholder="e.g., Grandma's Apple Pie"
                 required
-                disabled={isUploading}
+                disabled={isLoading}
+                className="bg-gray-50 dark:bg-neutral-700"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="briefIngredients">Key Ingredients (for AI analysis)</Label>
+              <Input
+                id="briefIngredients"
+                value={briefIngredients}
+                onChange={(e) => setBriefIngredients(e.target.value)}
+                placeholder="e.g., chicken, garlic, lemon, herbs"
+                disabled={isLoading}
                 className="bg-gray-50 dark:bg-neutral-700"
               />
             </div>
@@ -360,7 +251,7 @@ function UploadRecipePageContent() {
                 placeholder="Describe your recipe, ingredients, and cooking instructions..."
                 required
                 rows={6}
-                disabled={isUploading}
+                disabled={isLoading}
                 className="bg-gray-50 dark:bg-neutral-700"
               />
               <p className="text-xs text-muted-foreground">
@@ -376,13 +267,10 @@ function UploadRecipePageContent() {
                 accept="image/*"
                 onChange={handleImageUpload}
                 required
-                disabled={isUploading}
+                disabled={isLoading}
                 className="bg-gray-50 dark:bg-neutral-700"
               />
-              <p className="text-xs text-muted-foreground">
-                Maximum file size: 5MB. Supported formats: JPG, PNG, GIF, WebP
-              </p>
-
+              <p className="text-xs text-muted-foreground">Maximum file size: 5MB. Supported formats: JPG, PNG, GIF, WebP</p>
               {recipeImageUrl && (
                 <div className="mt-3">
                   <p className="text-sm font-medium mb-2">Preview:</p>
@@ -397,29 +285,82 @@ function UploadRecipePageContent() {
               )}
             </div>
 
-            <Button
-              type="submit"
-              className="w-full bg-yellow-500 hover:bg-yellow-600 text-black"
-              disabled={isUploading}
-            >
-              {isUploading ? (
+            {/* Cost per serving */}
+            <div className="space-y-2">
+              <Label htmlFor="costPerServing">Estimated Cost per Serving ($)</Label>
+              <Input
+                id="costPerServing"
+                type="number"
+                min="0"
+                step="0.25"
+                value={costPerServing}
+                onChange={(e) => setCostPerServing(e.target.value)}
+                placeholder="e.g. 2.50"
+                disabled={isLoading}
+                className="bg-gray-50 dark:bg-neutral-700 max-w-[160px]"
+              />
+              <p className="text-xs text-muted-foreground">
+                Helps students filter by budget. Under $5/serving recipes get featured.
+              </p>
+            </div>
+
+            {/* Waste Saver toggle */}
+            <div className="p-4 rounded-lg border-2 border-dashed border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Leaf className="w-5 h-5 text-green-600" />
+                  <Label htmlFor="wasteSaver" className="text-green-800 dark:text-green-300 font-semibold cursor-pointer">
+                    Waste Saver Recipe
+                  </Label>
+                </div>
+                <button
+                  type="button"
+                  id="wasteSaver"
+                  role="switch"
+                  aria-checked={isWasteSaver}
+                  onClick={() => setIsWasteSaver((v) => !v)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                    isWasteSaver ? "bg-green-500" : "bg-neutral-300 dark:bg-neutral-600"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      isWasteSaver ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+              <p className="text-xs text-green-700 dark:text-green-400">
+                Mark this if your recipe uses ingredients that are near expiry or on discount at NoName stores.
+                Waste Saver recipes earn <strong>bonus PCO points</strong> for every student who cooks it — and help stores sell stock before it goes to landfill.
+              </p>
+              {isWasteSaver && (
+                <div className="flex items-center gap-2 pt-1">
+                  <Gift className="w-4 h-4 text-yellow-600" />
+                  <span className="text-xs font-semibold text-yellow-700 dark:text-yellow-400">
+                    +250 bonus PCO points will be awarded to students who cook this recipe
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <Button type="submit" className="w-full bg-yellow-500 hover:bg-yellow-600 text-black" disabled={isLoading}>
+              {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Uploading Recipe...
+                  Analyzing with AI...
                 </>
               ) : (
                 <>
-                  <UploadCloud className="mr-2 h-4 w-4" />
-                  Upload Recipe
+                  <Wand2 className="mr-2 h-4 w-4" />
+                  Analyze & Generate Recipe
                 </>
               )}
             </Button>
           </form>
 
-
           {generatedRecipe && (
             <div className="space-y-6 pt-6 border-t dark:border-neutral-700">
-              {/* AI Analysis Summary */}
               {aiAnalysis && (
                 <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
                   <h3 className="text-lg font-semibold mb-3 flex items-center">
@@ -453,10 +394,7 @@ function UploadRecipePageContent() {
                       <div>
                         <p className="text-xs text-muted-foreground">Dietary</p>
                         <p className="font-medium">
-                          {aiAnalysis.dietaryInfo.length > 0 
-                            ? aiAnalysis.dietaryInfo.join(', ') 
-                            : 'Standard'
-                          }
+                          {aiAnalysis.dietaryInfo.length > 0 ? aiAnalysis.dietaryInfo.join(", ") : "Standard"}
                         </p>
                       </div>
                     </div>
@@ -498,7 +436,7 @@ function UploadRecipePageContent() {
                 </p>
                 <div className="space-y-3">
                   {extractedIngredients.map((ing) => {
-                    const aiIngredient = aiAnalysis?.ingredients.find(ai => ai.name === ing.name)
+                    const aiIngredient = aiAnalysis?.ingredients.find((ai) => ai.name === ing.name)
                     return (
                       <Card key={ing.id} className="p-3 bg-gray-50 dark:bg-neutral-700/50">
                         <div className="flex flex-col sm:flex-row gap-2 items-start">
@@ -580,9 +518,9 @@ function UploadRecipePageContent() {
               <Button
                 onClick={handleSubmitRecipe}
                 className="w-full bg-green-600 hover:bg-green-700 text-white"
-                disabled={isLoading}
+                disabled={isUploading}
               >
-                {isLoading ? (
+                {isUploading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <CheckCircle className="mr-2 h-4 w-4" />
@@ -591,7 +529,6 @@ function UploadRecipePageContent() {
               </Button>
             </div>
           )}
-
         </CardContent>
       </Card>
     </div>
